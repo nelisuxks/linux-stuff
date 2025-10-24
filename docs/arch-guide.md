@@ -1,15 +1,16 @@
 ---
 
 ---
-This is a simple guide to install Arch Linux on most computers and how to setup  the `kde plasma` desktop environment and it's useful `pcksgs`, including essentials like the `ssdm` display manager, GPU drivers, `firefox` browser and a GUI file manager `thunar`.
+This is a simple guide to install Arch Linux on most computers and how to setup  the `kde-plasma` desktop environment and it's useful `pcksgs`, including essentials like the `ssdm` display manager, GPU drivers, `firefox` browser and a GUI file manager `thunar`.
 
 >*Note:* this guide isn't perfect and you're always welcome to suggest changes
 
 >**Progress:**
->	*Installation:* All steps have been implemented.
->	*Desktop Environment:* Work has just begun xd
+>	*Installation:* All steps have been implemented. Future changes are possible.
+>	*Desktop Environment:* initial setup, dual-boot setup and `tty` QoL fixes implemented
 ---
-## set font, preferred keymap and fix time
+
+## user interface and time
 
 *set readable console font:*
 ```
@@ -34,14 +35,16 @@ timedatectl status
 >*note:* never install arch without time-sync because package manager operations and secure mirror connections rely on it
 ---
 ## network setup
->*note:* if you're using ethernet it should set itself up automatically, if it doesn't, it's likely caused by MAC address filtering
+>*note:* if you're using ethernet it should set itself up automatically - if it doesn't, it's likely caused by MAC address filtering (router feature)
 
-*active wlan check*
+*active `wlan` devices check*
 ```
 ip link
 ```
+>*note:*
+>`wlan0` is typically the tag for your primary Wi-Fi device 
 
-*wlan connection*
+*connect to Wi-Fi and check connection*
 ```
 iwctl
 device list
@@ -49,13 +52,10 @@ station wlan0 scan
 station wlan0 get-networks
 station wlan0 connect "your_wifi_name"
 exit
-```
-
-*internet check:*
-```
+---
 ping archlinux.org
 ```
-> *note:* press `Ctrl`+`C` to exit
+> *note:* press `Ctrl`+`C` to exit the `ping` command output
 ---
 ## drive partitioning
 
@@ -146,21 +146,18 @@ arch-chroot /mnt
 ---
 ## set time-zone
 
-*set city and region*
+*set `Area` and `Location`*
 ```
-ln -sf /usr/share/zoneinfo/Region/City /etc/localtime
+timedatectl set-timezone Area/Location
 ```
->*note:* to see available Cities for selected Region: 
->enter `zoneinfo` using `cd /usr/share/zoneinfo`
->select prefeed Region by `cd /Region`, example: `cd /Europe`
->list available Cities for Region by `ls` (usually nation capitals)
+>*note:* to see available timezones use `timedatectl list-timezones`
 
-*sync hw-clock*
+*sync `hw-clock`*
 ```
 hwclock --systohc
 ```
 ---
-## setup locale
+## setup locale and keymap
 
 *open locale config in nano*
 ```
@@ -174,7 +171,6 @@ en_US.UTF-8 UTF-8
 ```
 >*note:* when locale is uncommented=is enabled for the system
 >locales for DE/WM are configured in respective config files
->use `vconsole.conf` to configure default `tty` keymap
 
 *generate locales*
 ```
@@ -185,10 +181,23 @@ locale-gen
 ```
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 ```
+
+*create the default `tty` keymap config file*
+```
+nano /etc/vconsole.conf
+```
+
+*enter and save*
+```
+KEYMAP=ln-layout
+```
+>*note:* 
+>`ln`=language layout (eg. `us` for american)
+>`layout`=specific key layout (eg. `cz-qwertz` for czech QWERTZ layout)
 ---
 ## 11. hostname and host
 
-*set the sys-hostname*
+*set the system name
 ```
 echo "sys-hostname" > /etc/hostname
 ```
@@ -214,22 +223,23 @@ passwd
 ---
 ## install necessary utils and enable networking
 
-*install necessary pckgs and `networkmanager`*
+*install necessary `pckgs`*
 ```
-pacman -S networkmanager vim grub efibootmgr base-devel
+pacman -S iwd dhcpcd vim grub efibootmgr base-devel
 ```
 
-*enable `networkmanager`*
+*enable networking*
 ```
-systemctl enable NetworkManager
+systemctl enable iwd dhcpcd
 ```
 ---
 ## install and configure bootloader
 
 *install GRUB*
 ```
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=btid
 ```
+>*note:* `btid` can be replaced by any desired name, chosen name will show up in BIOS when selecting boot options
 
 *generate GRUB config*
 ```
@@ -238,7 +248,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 ---
 ## create user-acc
 
-*create new-user and add to `wheel` (admin group)*
+*create new-user and set user-passwd*
 ```
 useradd -m -G wheel -s /bin/bash new-user
 passwd new-user
@@ -275,14 +285,86 @@ reboot
 Congratulations, You have now successfully installed Arch! Login via user credentials and continue on your own, or follow the guide to install the `kde plasma` desktop environment, and various necessities.
 ## initial steps
 
-*change default `tty` keymap*
-```
-sudo nano /etc/vconsole.conf
-```
->*note:* use the same keymap name as you did with `loadkeys` during installation, then `reboot`
-
 *check network status*
 ```
-systemctl status NetworkManager
+sudo systemctl status iwd dhcpd
+```
+>*note:* 
+>sometimes networking services deactivate after finishing installation
+>re-activate them using `systemctl enable --now iwd dhcpcd`
+
+*connect to Wi-Fi and verify connection*
+```
+sudo iwctl
+station wlan0 connect "your_wifi_name"
+exit
+---
+ping archlinux.org
+```
+>*note:* 
+>setup is similar to the one you've done during installation
+>press `Ctrl`+`C` to exit the `ping` command output
+
+## **OPTIONAL:** setting up dual boot
+
+*download `os prober`*
+```
+sudo pacman -S os-prober
 ```
 
+*enable OS probing in GRUB config*
+```
+nano /etc/default/grub
+---
+GRUB_DISABLE_OS_PROBER=true
+```
+
+*rebuild GRUB config*
+```
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+```
+>*note:* 
+>reboot to enter GRUB menu
+>	detected OS entries will be automatically added to boot selection in GRUB menu
+>macOS/ZFS, encrypted (BitLocker, LUKS, FileVault etc.) and LVM partitions will not be detected 
+>	optionally you can check the output of  `os prober` to verify that your OS was detected
+## fixing `tty` font and resolution
+
+*download and test out high-res console fonts*
+```
+sudo pacman -S terminus-fonts
+---
+setfont ter-132b
+```
+>*note:* 
+>to see available fonts use `ls /usr/share/kbd/consolefonts/` 
+>font `ter-132b` is generally recommended for high-res screens
+
+*set desired font permanently*
+```
+sudo nano /etc/vconsole.conf
+---
+FONT=ter-132b
+```
+>*note:* applying requires reboot
+
+*change framebuffer resolution GRUB config*
+```
+sudo nano /etc/default/grub
+---
+GRUB_GFXMODE=res_widthxres_height
+GRUB_GFXPAYLOAD_LINUX=keep 
+```
+>*note:* 
+>check display resolution parameters before entering
+>also confirm that your resolution is supported by GRUB
+>	hit 'c' at the GRUB menu during boot
+>	type 'vbeinfo' or 'videoinfo' to list all valid resolutions
+>**failing to confirm your resolution and it's availability may result in an unreadable UI**
+
+*rebuild GRUB config and reboot*
+```
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+---
+sudo reboot
+```
