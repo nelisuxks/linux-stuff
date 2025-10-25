@@ -20,8 +20,9 @@ setfont ter-132b
 
 *set preferred keymap*
 ```
-loadkeys cz-qwertz
+loadkeys ln-layout
 ```
+
 
 *network time-sync:*
 ```
@@ -225,7 +226,7 @@ passwd
 
 *install necessary `pckgs`*
 ```
-pacman -S iwd dhcpcd vim grub efibootmgr base-devel
+pacman -S iwd dhcpcd vim grub efibootmgr base-devel man
 ```
 
 *enable networking*
