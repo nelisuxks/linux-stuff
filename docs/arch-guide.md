@@ -1,7 +1,7 @@
 ---
 
 ---
-This is a simple guide to install Arch Linux on most computers and how to setup  the `kde-plasma` desktop environment and it's useful `pcksgs`, including essentials like the `ssdm` display manager, GPU drivers, `firefox` browser and a GUI file manager `thunar`.
+This is a simple guide on how to install Arch Linux on most computers, how to setup  the `kde-plasma` desktop environment and other useful packages, including essentials like the `ssdm` display manager, GPU drivers, `waterfox` browser and a GUI file manager `thunar`.
 
 >*Note:* this guide isn't perfect and you're always welcome to suggest changes
 
@@ -9,7 +9,6 @@ This is a simple guide to install Arch Linux on most computers and how to setup 
 >	*Installation:* All steps have been implemented. Future changes are possible.
 >	*Desktop Environment:* initial setup, dual-boot setup and `tty` QoL fixes implemented
 ---
-
 ## user interface and time
 
 *set readable console font:*
@@ -113,7 +112,7 @@ mkswap /dev/sdx3
 mount /dev/sdx2 /mnt
 ```
 
-*creati efi-mount and mount it*
+*create efi-mount and mount it*
 ```
 mkdir /mnt/boot
 mount /dev/sdx1 /mnt/boot
@@ -138,9 +137,9 @@ genfstab -U /mnt >> /mnt/etc/fstab
 cat /mnt/etc/fstab
 ```
 ---
-## chroot into the sys
+## chroot into the system
 
-*change root to sys*
+*change root to system*
 ```
 arch-chroot /mnt
 ```
@@ -178,7 +177,7 @@ en_US.UTF-8 UTF-8
 locale-gen
 ```
 
-*set sys-lang*
+*set system language*
 ```
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 ```
@@ -247,7 +246,7 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=btid
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
 ---
-## create user-acc
+## create local account
 
 *create new-user and set user-passwd*
 ```
@@ -305,10 +304,10 @@ ping archlinux.org
 >*note:* 
 >setup is similar to the one you've done during installation
 >press `Ctrl`+`C` to exit the `ping` command output
-
+---
 ## **OPTIONAL:** setting up dual boot
 
-*download `os prober`*
+*install `os prober`*
 ```
 sudo pacman -S os-prober
 ```
@@ -328,7 +327,8 @@ sudo grub-mkconfig -o /boot/grub/grub.cfg
 >reboot to enter GRUB menu
 >	detected OS entries will be automatically added to boot selection in GRUB menu
 >macOS/ZFS, encrypted (BitLocker, LUKS, FileVault etc.) and LVM partitions will not be detected 
->	optionally you can check the output of  `os prober` to verify that your OS was detected
+>	optionally you can check the output of  `os-prober` to verify that your OS was detected
+---
 ## fixing `tty` font and resolution
 
 *download and test out high-res console fonts*
@@ -339,7 +339,7 @@ setfont ter-132b
 ```
 >*note:* 
 >to see available fonts use `ls /usr/share/kbd/consolefonts/` 
->font `ter-132b` is generally recommended for high-res screens
+> `ter-132b` is generally recommended for high-res screens
 
 *set desired font permanently*
 ```
@@ -349,7 +349,7 @@ FONT=ter-132b
 ```
 >*note:* applying requires reboot
 
-*change framebuffer resolution GRUB config*
+*change framebuffer resolution in GRUB config*
 ```
 sudo nano /etc/default/grub
 ---
@@ -359,9 +359,9 @@ GRUB_GFXPAYLOAD_LINUX=keep
 >*note:* 
 >check display resolution parameters before entering
 >also confirm that your resolution is supported by GRUB
->	hit 'c' at the GRUB menu during boot
->	type 'vbeinfo' or 'videoinfo' to list all valid resolutions
->**failing to confirm your resolution and it's availability may result in an unreadable UI**
+>	press `c` at the GRUB menu during boot to enter shell
+>	type `vbeinfo` or `videoinfo` to list all valid resolutions
+>**failing to confirm your resolution and it's availability may result in unreadable UI**
 
 *rebuild GRUB config and reboot*
 ```
@@ -369,3 +369,4 @@ sudo grub-mkconfig -o /boot/grub/grub.cfg
 ---
 sudo reboot
 ```
+---
